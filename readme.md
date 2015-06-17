@@ -1,22 +1,19 @@
-Any Editor Server for chrome-extension: 'Edit with Emacs'
-=========================================================
+Any Editor's Server for chrome-extension: 'Edit with Emacs'
+===========================================================
 
 How to run
 ----------
 
-1. Install 'Edit with Emacs' into Chrome
-2. Run editsrv : `editsrv.exe EDITOR-NAME (EDITOR-OPTIONS...)`
-3. Use 'Edit with Emacs'
+1. Install '[Edit with Emacs](https://chrome.google.com/webstore/detail/edit-with-emacs/ljobjlafonikaiipfkggjbhkghgicgoh)' into Chrome
+2. Run editsrv : `editsrv.exe EDITOR-NAME EDITOR-OPTIONS...`
+3. Use '[Edit with Emacs](https://chrome.google.com/webstore/detail/edit-with-emacs/ljobjlafonikaiipfkggjbhkghgicgoh)'
 
 For gvim.exe, use sample:
 
-    editsrv.exe gvim.exe --cmd "set fenc=utf8"
+    editsrv.exe gvim.exe
 
-Or
-
-    editvim.cmd
-
-To Stop service, press Ctrl-C. Enjoy.
+- Your editor have to support UTF-8.
+- To Stop service, press Ctrl-C. Enjoy.
 
 License
 -------
@@ -24,7 +21,4 @@ License
 
 Author
 ------
-- @zetamatta (HAYAMA\_Kaoru)
-
-
-
+- HAYAMA\_Kaoru [@zetamatta](https://github.com/zetamatta/)
