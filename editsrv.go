@@ -15,6 +15,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(os.Stderr, tmpfdErr)
 		return
 	}
+	io.WriteString(tmpfd,"\xEF\xBB\xBF")
 	tmpName := tmpfd.Name()
 	defer os.Remove(tmpName)
 
