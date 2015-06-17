@@ -10,6 +10,7 @@ import (
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(os.Stderr,"From: %s\n",req.RemoteAddr)
 	tmpfd, tmpfdErr := ioutil.TempFile("", "editsrv")
 	if tmpfdErr != nil {
 		fmt.Fprintln(os.Stderr, tmpfdErr)
