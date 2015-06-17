@@ -1,31 +1,83 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"html"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 )
 
-func handler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(os.Stderr,"From: %s\n",req.RemoteAddr)
-	for key,vals := range req.Header {
-		for _,val := range vals {
-			fmt.Fprintf(os.Stderr,"%s: %s\n",key,val)
+func HasHtml(headers map[string][]string) bool {
+	xurl, ok := headers["X-Url"]
+	if !ok || len(xurl) <= 0 {
+		return false
+	}
+	switch xurl[0] {
+	case "https://twitter.com/":
+		return true
+	default:
+		return false
+	}
+}
+
+func typeHeaders(h map[string][]string, w io.Writer) {
+	for key, vals := range h {
+		for _, val := range vals {
+			fmt.Fprintf(w, "%s: %s\n", key, val)
 		}
 	}
+}
+
+func html2text(out io.Writer, in io.Reader) {
+	scanner := bufio.NewScanner(in)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Fprintln(os.Stderr, line)
+		line = strings.TrimSpace(line)
+		line = strings.Replace(line, "<div><br></div>", "\n", -1)
+		line = strings.Replace(line, "<div>", "", -1)
+		line = strings.Replace(line, "</div>", "\n", -1)
+		line = html.UnescapeString(line)
+		io.WriteString(out, line)
+	}
+}
+
+func text2html(out io.Writer, in io.Reader) {
+	scanner := bufio.NewScanner(in)
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		line = html.EscapeString(line)
+		if line == "" {
+			line = "<br>"
+		}
+		fmt.Fprintf(out, "<div>%s</div>", line)
+	}
+}
+
+func handler(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(os.Stderr, "From: %s\n", req.RemoteAddr)
+	typeHeaders(req.Header, os.Stderr)
 	tmpfd, tmpfdErr := ioutil.TempFile("", "editsrv")
 	if tmpfdErr != nil {
 		fmt.Fprintln(os.Stderr, tmpfdErr)
 		return
 	}
-	io.WriteString(tmpfd,"\xEF\xBB\xBF")
+	io.WriteString(tmpfd, "\xEF\xBB\xBF")
 	tmpName := tmpfd.Name()
 	defer os.Remove(tmpName)
 
-	io.CopyN(tmpfd, req.Body, req.ContentLength)
+	hasHtml := HasHtml(req.Header)
+	if hasHtml {
+		html2text(tmpfd, req.Body)
+	} else {
+		io.CopyN(tmpfd, req.Body, req.ContentLength)
+	}
 	tmpfd.Close()
 
 	var editorName string
@@ -56,9 +108,13 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	fmt.Fprintf(os.Stderr, "Send '%s' to Chrome\n", tmpName)
-	_, copyErr2 := io.Copy(w, tmpfd)
-	if copyErr2 != nil {
-		fmt.Fprintln(os.Stderr, copyErr2)
+	if hasHtml {
+		text2html(w, tmpfd)
+	} else {
+		_, copyErr2 := io.Copy(w, tmpfd)
+		if copyErr2 != nil {
+			fmt.Fprintln(os.Stderr, copyErr2)
+		}
 	}
 	tmpfd.Close()
 	fmt.Fprintln(os.Stderr, "Done")
