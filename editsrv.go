@@ -17,12 +17,7 @@ func HasHtml(headers map[string][]string) bool {
 	if !ok || len(xurl) <= 0 {
 		return false
 	}
-	switch xurl[0] {
-	case "https://twitter.com/":
-		return true
-	default:
-		return false
-	}
+	return strings.HasPrefix(xurl[0], "https://twitter.com")
 }
 
 func typeHeaders(h map[string][]string, w io.Writer) {
