@@ -11,6 +11,11 @@ import (
 
 func handler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(os.Stderr,"From: %s\n",req.RemoteAddr)
+	for key,vals := range req.Header {
+		for _,val := range vals {
+			fmt.Fprintf(os.Stderr,"%s: %s\n",key,val)
+		}
+	}
 	tmpfd, tmpfdErr := ioutil.TempFile("", "editsrv")
 	if tmpfdErr != nil {
 		fmt.Fprintln(os.Stderr, tmpfdErr)
